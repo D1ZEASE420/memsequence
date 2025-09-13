@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gabitreening</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #1c1c1c;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 40px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      grid-gap: 10px;
+      margin-top: 20px;
+    }
+    .cell {
+      width: 100px;
+      height: 100px;
+      background: #333;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .cell.highlight {
+      background: #4caf50;
+    }
+    .cell.correct {
+      background: #2196f3;
+    }
+    .cell.wrong {
+      background: #e53935;
+    }
+    .controls {
+      margin-top: 20px;
+      text-align: center;
+    }
+    #startBtn {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #result {
+      margin-top: 15px;
+      font-size: 18px;
+    }
+    input[type=range] {
+      width: 300px;
+    }
+    .watermark {
+      position: fixed;
+      bottom: 10px;
+      text-align: center;
+      width: 100%;
+      font-size: 12px;
+      color: #555;
+      opacity: 0.5;
+      pointer-events: none;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>hakka harjutama tatt</h1>
+
+  <div class="controls">
+    <div style="margin-bottom: 10px;">
+      <label for="timerSlider">completing aeg: <span id="timerLabel">3.0</span> seconds</label><br>
+      <input type="range" id="timerSlider" min="1" max="10" step="0.1" value="3">
+    </div>
+
+    <div style="margin-bottom: 10px;">
+      <label for="levelSelector">Max level:</label>
+      <select id="levelSelector">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10" selected>10</option>
+      </select>
+    </div>
+
+    <button id="startBtn">akka pihta</button>
+    <div id="result"></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="watermark">@D1ZEASE</div>
+
+  <script>
+    const grid = document.getElementById('grid');
+    const timerSlider = document.getElementById('timerSlider');
+    const timerLabel = document.getElementById('timerLabel');
+    const result = document.getElementById('result');
+    const startBtn = document.getElementById('startBtn');
+    const levelSelector = document.getElementById('levelSelector');
+
+    const gridSize = 9;
+    let sequence = [];
+    let userSequence = [];
+    let clickable = false;
+    let timeout;
+    let level = 1;
+    let maxLevel = 10;
+
+    for (let i = 0; i < gridSize; i++) {
+      const cell = document.createElement('div');
+      cell.classList.add('cell');
+      cell.dataset.index = i;
+      grid.appendChild(cell);
+    }
+
+    const cells = Array.from(document.querySelectorAll('.cell'));
+
+    timerSlider.addEventListener('input', () => {
+      timerLabel.textContent = parseFloat(timerSlider.value).toFixed(1);
+    });
+
+    async function highlightSequence(seq) {
+      for (let i = 0; i < seq.length; i++) {
+        const cell = cells[seq[i]];
+        cell.classList.add('highlight');
+        await new Promise(res => setTimeout(res, 250));
+        cell.classList.remove('highlight');
+        await new Promise(res => setTimeout(res, 100));
+      }
+    }
+
+    function resetGridVisuals() {
+      cells.forEach(cell => {
+        cell.classList.remove('correct', 'wrong', 'highlight');
+      });
+    }
+
+    function generateSequence(length) {
+      const seq = [];
+      for (let i = 0; i < length; i++) {
+        if (i > 0 && Math.random() < 0.2) {
+          seq.push(seq[i - 1]);
+        } else {
+          const rand = Math.floor(Math.random() * gridSize);
+          seq.push(rand);
+        }
+      }
+      return seq;
+    }
+
+    async function startRound() {
+      resetGridVisuals();
+      userSequence = [];
+      sequence = generateSequence(level);
+      result.textContent = `Level ${level}`;
+      await highlightSequence(sequence);
+      clickable = true;
+
+      const maxTime = parseFloat(timerSlider.value) * 1000;
+      timeout = setTimeout(() => {
+        if (clickable) {
+          endGame(false);
+        }
+      }, maxTime);
+    }
+
+    function endGame(success) {
+      clickable = false;
+      clearTimeout(timeout);
+      if (success) {
+        if (level >= maxLevel) {
+          result.textContent = `🏆 Sa ei olegi Gabi!!!`;
+        } else {
+          level++;
+          setTimeout(() => {
+            startRound();
+          }, 1000);
+        }
+      } else {
+        result.textContent = `❌ gabi tra Level ${level}. tee uuesti.`;
+        level = 1;
+      }
+    }
+
+    cells.forEach(cell => {
+      cell.addEventListener('click', () => {
+        if (!clickable) return;
+
+        const index = parseInt(cell.dataset.index);
+        const expected = sequence[userSequence.length];
+
+        if (index === expected) {
+          userSequence.push(index);
+          cell.classList.add('correct');
+          setTimeout(() => cell.classList.remove('correct'), 150);
+          if (userSequence.length === sequence.length) {
+            endGame(true);
+          }
+        } else {
+          cell.classList.add('wrong');
+          endGame(false);
+        }
+      });
+    });
+
+    startBtn.addEventListener('click', () => {
+      level = 1;
+      maxLevel = parseInt(levelSelector.value);
+      startRound();
+    });
+  </script>
+
+</body>
+</html>

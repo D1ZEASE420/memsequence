@@ -152,12 +152,11 @@
     function generateSequence(length) {
       const seq = [];
       for (let i = 0; i < length; i++) {
-        if (i > 0 && Math.random() < 0.2) {
-          seq.push(seq[i - 1]);
-        } else {
-          const rand = Math.floor(Math.random() * gridSize);
-          seq.push(rand);
-        }
+        let rand;
+        do {
+          rand = Math.floor(Math.random() * gridSize);
+        } while (i > 0 && rand === seq[i - 1]);
+        seq.push(rand);
       }
       return seq;
     }
@@ -226,4 +225,5 @@
 
 </body>
 </html>
+
 

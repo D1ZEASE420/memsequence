@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -149,13 +149,14 @@
       });
     }
 
+    // ✅ allows repeats but not immediately back-to-back
     function generateSequence(length) {
       const seq = [];
       for (let i = 0; i < length; i++) {
         let rand;
         do {
           rand = Math.floor(Math.random() * gridSize);
-        } while (i > 0 && rand === seq[i - 1]);
+        } while (i > 0 && rand === seq[i - 1]); // block only back-to-back repeats
         seq.push(rand);
       }
       return seq;
@@ -182,7 +183,7 @@
       clearTimeout(timeout);
       if (success) {
         if (level >= maxLevel) {
-          result.textContent = `🏆 Sa ei olegi Gabi!!! tomba paletsi nuud tatt`;
+          result.textContent = `🏆 Sa ei olegi Gabi!!!`;
         } else {
           level++;
           setTimeout(() => {
@@ -225,5 +226,3 @@
 
 </body>
 </html>
-
-
